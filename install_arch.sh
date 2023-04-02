@@ -8,7 +8,7 @@ CHROOT="arch-chroot /mnt/"
 
 #
 # $username = username da conta
-# $user_passord = senha da conta
+# $user_password = senha da conta
 # $root_password = senha do root
 # $host_name = nome do host do arch
 #
@@ -48,13 +48,13 @@ get_info(){
     done
   while true
   do
-    read -rsp "Senha do(a) usuario(a) $username :" user_passord
+    read -rsp "Senha do(a) usuario(a) $username :" user_password
     echo 
     echo
     read -rsp "Confirme a senha: " user_password_conf
     echo 
     echo
-      if [ "$user_passord" != "$user_password_conf" ]; then 
+      if [ "$user_password" != "$user_password_conf" ]; then 
         echo -e "$vermelho  Sua senha não coincide! tente novamente"
       fi
     echo -e "$verde Senha correta! $azulClaro"
@@ -108,7 +108,8 @@ hardware_info(){
 
 format_partitions() {
   lsblk "${drive}" -I 8 -o NAME,SIZE,FSTYPE,PARTTYPENAME
-			echo
+		echo -e "$azulClaro------------------------------"
+		echo
 			
 			PS3="escolha a partição raiz que acabou de criar: "
 	select partroot in $(fdisk -l "${drive}" | grep Linux | cut -d" " -f1) 
@@ -125,7 +126,8 @@ format_partitions() {
 
   logo "Escolha a partição EFI"
   lsblk "${drive}" -I 8 -o NAME,SIZE,FSTYPE,PARTTYPENAME
-  echo
+  	echo -e "$azulClaro------------------------------"
+	echo
 
   PS3="Escolha a partição de boot: "
   select partboot in $(fdisk -l "${drive}" | grep EFI | cut -d" " -f1)
@@ -144,7 +146,8 @@ format_partitions() {
 
     logo "Escolha a partição HOME"
   lsblk "${drive}" -I 8 -o NAME,SIZE,FSTYPE,PARTTYPENAME
-  echo
+  echo -e "$azulClaro------------------------------"
+	echo
 
   PS3="Escolha a partição de home: "
   select parthome in $(fdisk -l "${drive}" | grep Linux | cut -d" " -f1)
@@ -181,7 +184,7 @@ swap_part(){
 				okie
 				break
 					
-			elif [ "$swappart" = "Nao quero swap" ]; then
+			elif [ "$swappart" = "Não quero swap" ]; then
 					
 				break
 					
@@ -202,20 +205,20 @@ swap_part(){
 
 # 4 
 confirm_info() {
-  printf "\n\n%s\n\n" "--------------------"
-	printf " Username:      %s%s%s\n" "${purple}" "$username" "${azulClaro}"
-	printf " Hostname:  %s%s%s\n" "${purple}" "$host_name" "${azulClaro}"
+  echo -e "--------------------"
+  echo -e  " Username:  ${purple} $username ${azulClaro}"
+  echo -e  " Hostname:  ${purple} $host_name ${azulClaro}"
 	
 	if [ "$swappart" = "Criar arquivo swap" ]; then
-		printf " Swap:      %sSim%s criar arquivo swap de 4G\n" "${purpleClaro}" "${azulClaro}"
+		echo -e  " Swap:      ${purpleClaro}Sim criar arquivo swap de 4G${azulClaro}"
 	elif [ "$swappart" = "Não quero swap" ]; then
-		printf " Swap:      %sNão%s\n" "${purpleClaro}" "${azulClaro}"
+		echo -e  " Swap:    ${purpleClaro} Não quero swap${azulClaro}"
 	elif [ "$swappart" ]; then
-		printf " Swap:      %sSim%s em %s[%s%s%s%s%s]%s\n" "${azulClaro}" "${azulClaro}" "${purple}" "${azulClaro}" "${purple}" "${swappart}" "${azulClaro}" "${purple}" "${azulClaro}"
+		echo -e  " Swap:      Sim em ${purpleClaro} ${swappart}" 
 	fi
 		
 		echo		
-		printf "\n Arch Linux será instalado no disco %s[%s%s%s%s%s]%s na partição %s[%s%s%s%s%s]%s\n\n\n" "${purpleClaro}" "${azulClaro}" "${purpleClaro}" "${drive}" "${azulClaro}" "${purple}" "${azulClaro}" "${purpleClaro}" "${azulClaro}" "${purple}" "${partroot}" "${azulClaro}" "${purpleClaro}" "${azulClaro}"
+		echo -e  "Arch Linux será instalado no disco ${purpleClaro} ${drive} na partição ${purpleClaro} ${partroot}"
 		
 	while true; do
 			read -rp " Deseja continuar? [s/N]: " sn
@@ -259,7 +262,7 @@ timezone(){
 	echo "pt_BR.UTF-8 UTF-8" >> /mnt/etc/locale.gen
 	$CHROOT locale-gen
 	echo "LANG=pt_BR.UTF-8" >> /mnt/etc/locale.conf
-	echo "KEYMAP=br-aabnt2" >> /mnt/etc/vconsole.conf
+	echo "KEYMAP=br-abnt2" >> /mnt/etc/vconsole.conf
 	export LANG=pt_BR.UTF-8
 }
 # 7
@@ -279,10 +282,11 @@ setup_user() {
 
 	echo "root:$root_password" | $CHROOT chpasswd
 	$CHROOT useradd -m -g users -G wheel -s /usr/bin/zsh "${username}"
-	echo "$username:$user_passord" | $CHROOT chpasswd
+	echo "$username:$user_password" | $CHROOT chpasswd
 	sed -i 's/# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/; /^root ALL=(ALL:ALL) ALL/a '"${username}"' ALL=(ALL:ALL) ALL' /mnt/etc/sudoers
 	echo "Defaults insults" >> /mnt/etc/sudoers
-	printf " %sroot%s : %s%s%s\n %s%s%s : %s%s%s\n" "${azulClaro}" "${azulClaro}" "${purpleClaro}" "${root_password}" "${azulClaro}" "${purple}" "${username}" "${azulClaro}" "${purple}" "${user_passord}" "${azulClaro}"
+	echo  -e "${azulClaro} root: ${purpleClaro} ${root_password}" 
+	echo -e "${azulClaro} ${username}: ${purpleClaro} ${user_password}"
 }
 # 9
 mirrors(){
@@ -338,13 +342,24 @@ finish(){
 					  xdg-user-dirs gtk-engine-murrine \
 					  --noconfirm
 
+logo "Instalando a interface GNOME minimal"
+	$CHROOT pacman -S \
+  					xorg-server \ 
+					xorg-xinit \
+					xf86-input-synaptics \
+					gnome-shell nautilus \
+					gnome-terminal guake \
+					gnome-tweak-tool \
+					gnome-control-center \
+					xdg-user-dirs \
+					gdm networkmanager \
+					gnome-keyring
   logo "Rice theme download"
   $CHROOT curl https://raw.githubusercontent.com/TheV0idxz/dotfiles/master/RiceInstaller -o /home/$username/RiceInstaller
 
-  logo "Instalando a interface GNOME minimal"
+  
 
-  $CHROOT pacman -S xorg-server xorg-xinit xf86-input-synaptics gnome-shell nautilus gnome-terminal guake gnome-tweak-tool gnome-control-center xdg-user-dirs gdm networkmanager gnome-keyring 
-  $CHROOT systemctl enable NetworkManager
+   
 
 
 }
