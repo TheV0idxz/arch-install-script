@@ -100,8 +100,8 @@ hardware_info(){
 			fi
 		done
   logo "Criando as partições"
-  sleep 10
   echo -e "$purple Crie uma partição EFI de 512mb, RAIZ e uma HOME"
+  sleep 4
   cfdisk "${drive}"
 	clear
 }
@@ -344,15 +344,13 @@ finish(){
 
 logo "Instalando a interface GNOME minimal"
 	$CHROOT pacman -S \
-  					xorg-server \ 
-					xorg-xinit \
-					xf86-input-synaptics \
+  				xorg-server xorg-xinit xf86-input-synaptics \
 					gnome-shell nautilus \
 					gnome-terminal guake \
 					gnome-tweak-tool \
 					gnome-control-center \
 					xdg-user-dirs \
-					gdm networkmanager \
+					gdm networkmanager network-manager-applet \
 					gnome-keyring --noconfirm
 	$CHROOT systemctl enable NetworkManager gdm
   logo "Rice theme download"
@@ -386,5 +384,4 @@ base_system
 timezone
 setup_internet
 setup_user
-mirrors
 finish 
